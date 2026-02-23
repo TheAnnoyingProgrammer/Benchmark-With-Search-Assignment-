@@ -6,6 +6,8 @@
 #include <chrono>
 using namespace std;
 
+#define AVRG_COUNT 100
+
 /**
  * @brief returns the first index of elem if it exists, otherwise returns -1
  * iterativeSearch starts at the first index and iterates sequentially to the next until it either
@@ -115,42 +117,50 @@ int main() {
     // test elements to search for
     vector<int> elem_to_find;
     vecGen("test_elem.csv", elem_to_find);
+
     // size (n) of all tests 
     vector<int> file_sizes;
     vecGen("sizes.csv", file_sizes);
 
-    //n list of numbers
-    vector<int>v;
+    // n list of numbers
+    vector<int> v;
 
-    //results of times
+    // results of times
     vector<double> times;
 
-    //results of avg per workload size
+    // results of avg per workload size
     vector<double> avg;
 
     // create a for loop to iterate through the file sizes
-    for (int i = 0; i < file_sizes.size(); i++) {
+    for (int i = 0; i < (int)file_sizes.size(); i++) {
+
         // get the name/size of the file and assign it to string called filename
         string filename = to_string(file_sizes[i]) + "_numbers.csv";
-        //call vecGen on filename and v
+
+        // call vecGen on filename and v
         vecGen(filename, v);
+
         // print filename (this will be good for debugging)
         cout << "Loaded: " << filename << " (n=" << v.size() << ")\n";
+
         // call times.clear() // this ensures that we reset times everytime we read a new file 
         times.clear();
+
         // create another for loop to iterate through all the elements from elem_to_find. 
         // the code here should be nearly identical to the code from the previous lab 
         for (int j = 0; j < (int)elem_to_find.size(); j++) {
+
             auto start = chrono::high_resolution_clock::now();
-            (void)iterativeSearch(v, elem_to_find[j]);
+
+            for (int k = 0; k < AVRG_COUNT; k++) {
+                (void)iterativeSearch(v, elem_to_find[j]);
+            }
+
             auto end = chrono::high_resolution_clock::now();
 
-            double elapse_time_in_sec = chrono::duration<double>(end - start).count();
+            double elapsed_time_in_sec = chrono::duration<double>(end - start).count();
 
-            // append the elapsed_time_in_sec to the vector,times (hint: push_back())
-            // This code shuold be within the for loop that iterates 
-            // through all the elements from elem_to_find
-            times.push_back(elapse_time_in_sec);
+            times.push_back(elapsed_time_in_sec);
         }
 
         // call average on the vector, times, and save it as a double. This code should be 
@@ -165,8 +175,8 @@ int main() {
         avg.push_back(avg_time);
     }
 
-    //outside both for loops call writeTimes with the appropriate parameters
-    // the first parameter should be "iterativeSearch_times.csv"
+    // outside both for loops call writeTimes with the appropriate parameters
+    // the first parameter should be "iterativeSearch_time.csv"
     // read the function brief to complete the rest of the parameters
     writeTimes("iterativeSearch_time.csv", avg, file_sizes);
 
@@ -175,20 +185,26 @@ int main() {
 
     // repeat the nested for loops used for iterativeSearch, but call binarySearch instead
     for (int i = 0; i < (int)file_sizes.size(); i++) {
+
         string filename = to_string(file_sizes[i]) + "_numbers.csv";
         vecGen(filename, v);
-        cout << "Loaded: " << filename << "(n= " << v.size() << ")\n";
-        times.clear();
-        for (int j = 0; j < (int)elem_to_find.size(); j++) {
-            clock_t start = clock();
+        cout << "Loaded: " << filename << " (n=" << v.size() << ")\n";
 
-            for (int k = 0; k < 1000; k++) {
-                binarySearch(v, 0, v.size() - 1, elem_to_find[j]);
+        times.clear();
+
+        for (int j = 0; j < (int)elem_to_find.size(); j++) {
+
+            auto start = chrono::high_resolution_clock::now();
+
+            for (int k = 0; k < AVRG_COUNT; k++) {
+                (void)binarySearch(v, 0, v.size() - 1, elem_to_find[j]);
             }
 
-            clock_t end = clock();
+            auto end = chrono::high_resolution_clock::now();
 
-            double elapsed_time_in_sec = double(end - start) / CLOCKS_PER_SEC;
+            double elapsed_time_in_sec =
+                chrono::duration<double>(end - start).count();
+
             times.push_back(elapsed_time_in_sec);
         }
 
@@ -196,7 +212,7 @@ int main() {
         avg.push_back(avg_time);
     }
 
-    //outside both for loops call writeTimes with the appropriate parameters
+    // outside both for loops call writeTimes with the appropriate parameters
     // the first parameter should be "binarySearch_times.csv"
     // read the function brief to complete the rest of the parameters
     writeTimes("binarySearch_times.csv", avg, file_sizes);
